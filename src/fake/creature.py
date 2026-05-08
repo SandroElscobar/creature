@@ -25,8 +25,8 @@ def create(creature: Creature) -> Creature:
     return creature
 
 
-def modify(creature: Creature) -> Creature:
-    return creatures
+def modify(name: str, creature: Creature) -> Creature:
+    return creature
 
 def replace(creature: Creature) -> Creature:
     return creature

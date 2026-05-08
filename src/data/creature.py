@@ -1,3 +1,6 @@
+from sqlite3 import IntegrityError
+
+from .errors import Missing, Duplicate
 from .init import conn, cursor
 from model.creature import Creature
 
@@ -20,7 +23,10 @@ def get_one(name: str) -> Creature | None:
     params = {"name": name}
     cursor.execute(qry, params)
     row = cursor.fetchone()
-    return row_to_model(row)
+    if row:
+        return row_to_model(row)
+    else:
+        raise Missing(msg=f"No creature with name {name}")
 
 def get_all() -> list[Creature]:
     qry = "select * from creature"
@@ -29,9 +35,13 @@ def get_all() -> list[Creature]:
     return [row_to_model(row) for row in cursor.fetchall()]
 
 def create(creature: Creature) -> Creature | None:
+    if not creature: return None
     qry = """insert into creature values (:name, :description, :country, :area, :aka)"""
     params = model_to_dict(creature)
-    cursor.execute(qry, params)
+    try:
+        cursor.execute(qry, params)
+    except IntegrityError:
+        raise Duplicate(msg=f"Creature with name {creature.name} already exists")
     return get_one(creature.name)
 
 def modify(creature: Creature):
@@ -44,15 +54,19 @@ def modify(creature: Creature):
         where name = :name_orig"""
     params = model_to_dict(creature)
     params["name_orig"] = creature.name
-    _ = cursor.execute(qry, params)
-    return get_one(creature.name)
+    cursor.execute(qry, params)
+    if cursor.rowcount == 1:
+        return get_one(creature.name)
+    else:
+        raise Missing(msg=f"No creature with name {creature.name}")
 
 def replace(creature: Creature) -> Creature | None:
     return creature
 
-def delete(creature: Creature):
+def delete(name):
     qry = """delete from creature where name = :name"""
-    params = {"name": creature.name}
-    res = cursor.execute(qry, params)
-    return bool(res)
+    params = {"name": name}
+    cursor.execute(qry, params)
+    if cursor.rowcount != 1:
+        raise Missing(msg=f"No creature with name {name}")
 

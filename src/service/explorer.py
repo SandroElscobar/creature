@@ -13,8 +13,8 @@ def create(explorer: Explorer) -> Explorer:
 def replace(id, explorer: Explorer) -> Explorer:
     return data.replace(id, explorer)
 
-def modify(id, explorer: Explorer) -> Explorer:
-    return data.modify(id, explorer)
+def modify(explorer: Explorer) -> Explorer | None:
+    return data.modify(explorer)
 
-def delete(id, explorer: Explorer) -> bool:
-    return data.delete(id)
+def delete(name) -> bool:
+    return data.delete(name)
